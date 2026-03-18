@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 
 # ─── DATA LOADING & CLEANING ───────────────────────────────────────────────
 df_raw = pd.read_csv(
-    "1773255985411_exp1_14drivers_14cars_dailyRoutes.csv",
+    "exp1_14drivers_14cars_dailyRoutes.csv",
     low_memory=False
 )
 
@@ -77,3 +77,111 @@ def apply_template(fig):
     fig.update_layout(**PLOTLY_TEMPLATE["layout"])
     return fig
 
+# ─── APP INIT ───────────────────────────────────────────────────────────────
+app = Dash(
+    __name__,
+    external_stylesheets=[
+        dbc.themes.BOOTSTRAP,
+        "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    ],
+    title="Fleet Analytics · OBD-II Dashboard"
+)
+
+# ─── LAYOUT ─────────────────────────────────────────────────────────────────
+def kpi_card(title, value_id, unit="", icon=""):
+    return html.Div([
+        html.Div(icon, style={"fontSize": "22px", "marginBottom": "6px", "opacity": "0.9"}),
+        html.Div(title, style={"fontSize": "11px", "color": MUTED, "letterSpacing": "0.12em",
+                                "textTransform": "uppercase", "marginBottom": "4px", "fontFamily": "'JetBrains Mono'"}),
+        html.Div([
+            html.Span(id=value_id, style={"fontSize": "26px", "fontWeight": "700",
+                                           "color": ACCENT, "fontFamily": "'JetBrains Mono'"}),
+            html.Span(f" {unit}", style={"fontSize": "12px", "color": MUTED, "marginLeft": "2px"}),
+        ])
+    ], style={
+        "background": CARD_BG, "border": f"1px solid {BORDER}",
+        "borderRadius": "12px", "padding": "18px 20px",
+        "borderTop": f"2px solid {ACCENT}",
+        "flex": "1", "minWidth": "140px"
+    })
+
+app.layout = html.Div([
+
+    # ── HEADER ──
+    html.Div([
+        html.Div([
+            html.Span("◈ ", style={"color": ACCENT, "fontSize": "28px"}),
+            html.Span("FLEET", style={"fontFamily": "'JetBrains Mono'", "fontWeight": "700",
+                                       "fontSize": "24px", "letterSpacing": "0.15em", "color": TEXT}),
+            html.Span("ANALYTICS", style={"fontFamily": "'JetBrains Mono'", "fontWeight": "300",
+                                           "fontSize": "24px", "letterSpacing": "0.15em", "color": ACCENT,
+                                           "marginLeft": "8px"}),
+        ], style={"display": "flex", "alignItems": "center"}),
+        html.Div("OBD-II · 14 Vehicles · Real-Time Telemetry",
+                 style={"color": MUTED, "fontSize": "12px", "fontFamily": "'JetBrains Mono'",
+                        "letterSpacing": "0.08em", "marginTop": "4px"}),
+    ], style={
+        "background": f"linear-gradient(135deg, {BG} 0%, #0D1526 100%)",
+        "borderBottom": f"1px solid {BORDER}", "padding": "24px 32px",
+        "display": "flex", "flexDirection": "column"
+    }),
+
+    # ── FILTERS BAR ──
+    html.Div([
+        html.Div([
+            html.Label("VEHICLE", style={"color": MUTED, "fontSize": "10px",
+                                          "fontFamily": "'JetBrains Mono'", "letterSpacing": "0.1em",
+                                          "display": "block", "marginBottom": "6px"}),
+            dcc.Dropdown(
+                id="vehicle-filter",
+                options=[{"label": "All Vehicles", "value": "ALL"}] +
+                        [{"label": v.upper(), "value": v} for v in VEHICLES],
+                value="ALL", clearable=False, multi=False,
+                style={"background": CARD_BG, "minWidth": "160px"},
+                className="dark-dropdown"
+            ),
+        ]),
+        html.Div([
+            html.Label("METRIC (Time Series)", style={"color": MUTED, "fontSize": "10px",
+                                                       "fontFamily": "'JetBrains Mono'", "letterSpacing": "0.1em",
+                                                       "display": "block", "marginBottom": "6px"}),
+            dcc.Dropdown(
+                id="metric-selector",
+                options=[
+                    {"label": "Speed (km/h)", "value": "SPEED"},
+                    {"label": "Engine RPM", "value": "ENGINE_RPM"},
+                    {"label": "Engine Load (%)", "value": "ENGINE_LOAD"},
+                    {"label": "Coolant Temp (°C)", "value": "ENGINE_COOLANT_TEMP"},
+                    {"label": "Throttle Position (%)", "value": "THROTTLE_POS"},
+                    {"label": "Air Intake Temp (°C)", "value": "AIR_INTAKE_TEMP"},
+                    {"label": "MAF (g/s)", "value": "MAF"},
+                ],
+                value="SPEED", clearable=False,
+                style={"background": CARD_BG, "minWidth": "200px"},
+                className="dark-dropdown"
+            ),
+        ]),
+        html.Div([
+            html.Label("X-AXIS (Scatter)", style={"color": MUTED, "fontSize": "10px",
+                                                   "fontFamily": "'JetBrains Mono'", "letterSpacing": "0.1em",
+                                                   "display": "block", "marginBottom": "6px"}),
+            dcc.Dropdown(
+                id="scatter-x",
+                options=[
+                    {"label": "Engine RPM", "value": "ENGINE_RPM"},
+                    {"label": "Throttle Position (%)", "value": "THROTTLE_POS"},
+                    {"label": "Engine Load (%)", "value": "ENGINE_LOAD"},
+                    {"label": "Air Intake Temp (°C)", "value": "AIR_INTAKE_TEMP"},
+                ],
+                value="ENGINE_RPM", clearable=False,
+                style={"background": CARD_BG, "minWidth": "200px"},
+                className="dark-dropdown"
+            ),
+        ]),
+    ], style={
+        "background": "#0D1526", "borderBottom": f"1px solid {BORDER}",
+        "padding": "16px 32px", "display": "flex", "gap": "24px",
+        "alignItems": "flex-end", "flexWrap": "wrap"
+    }),
+
+   
